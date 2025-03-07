@@ -1,10 +1,10 @@
-# Copyright 2018-2022 Streamlit Inc.
+# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import streamlit as st
-import inspect
-import textwrap
+from urllib.error import URLError
+
 import pandas as pd
 import pydeck as pdk
-from utils import show_code
 
-
-from urllib.error import URLError
+import streamlit as st
+from streamlit.hello.utils import show_code
 
 
 def mapping_demo():
-    @st.experimental_memo
+    @st.cache_data
     def from_data_file(filename):
         url = (
-            "http://raw.githubusercontent.com/streamlit/"
+            "https://raw.githubusercontent.com/streamlit/"
             "example-data/master/hello/v1/%s" % filename
         )
         return pd.read_json(url)
@@ -57,7 +55,7 @@ def mapping_demo():
                 get_position=["lon", "lat"],
                 get_text="name",
                 get_color=[0, 0, 0, 200],
-                get_size=15,
+                get_size=10,
                 get_alignment_baseline="'bottom'",
             ),
             "Outbound Flow": pdk.Layer(
@@ -83,7 +81,7 @@ def mapping_demo():
         if selected_layers:
             st.pydeck_chart(
                 pdk.Deck(
-                    map_style="mapbox://styles/mapbox/light-v9",
+                    map_style=None,
                     initial_view_state={
                         "latitude": 37.76,
                         "longitude": -122.4,
