@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+from data_extraction import extract_polygon_data_from_html
 
 # Page Configuration
 st.set_page_config(page_title="Dynamic Map Visualization", layout="wide")
@@ -12,7 +13,7 @@ st.sidebar.title("⚙️ Settings")
 zone = st.sidebar.selectbox("Select Zone:", ["Germany", "France"])
 
 # Scale Selection
-scale = st.sidebar.selectbox("Select Scale:", ["Grid", "NUTS 3", "NUTS 2", "NUTS 1"])
+scale = st.sidebar.selectbox("Select Scale:", ["Finest", "Grid", "NUTS 3", "NUTS 2", "NUTS 1"])
 
 # Show Grid Toggle
 show_grid = st.sidebar.checkbox("Show Grid Overlay", False)
@@ -43,37 +44,21 @@ if os.path.exists(map_file):
 else:
     st.error(f"Map file `{map_file}` not found! Please ensure the file exists.")
 
-# Data Tables Section
-st.subheader("📊 Data Tables")
+if scale == "Grid":
+    # Data Tables Section
+    st.subheader("📊 Data Tables")
 
-# Sample Data (You can replace this with actual data from a database or CSV file)
-data1 = pd.DataFrame({
-    "ID": [1, 2, 3, 4],
-    "Name": ["Farm A", "Farm B", "Farm C", "Farm D"],
-    "Size (ha)": [50, 120, 75, 90],
-    "Soil Moisture (%)": [30, 45, 55, 40] if variable == "Soil Moisture" else [None] * 4,
-    "Temperature (°C)": [22, 25, 24, 23] if variable == "Temperature" else [None] * 4,
-    "NDVI Index": [0.7, 0.8, 0.65, 0.72] if variable == "NDVI" else [None] * 4,
-    "Rainfall (mm)": [10, 15, 12, 8] if variable == "Rainfall" else [None] * 4
-})
+    # Sample Data (You can replace this with actual data from a database or CSV file)
+    data1 = extract_polygon_data_from_html(map_file)
 
-data2 = pd.DataFrame({
-    "Crop": ["Wheat", "Corn", "Rice", "Soybean"],
-    "Yield (tons)": [200, 350, 180, 250],
-    "Irrigation Needed": ["Yes", "No", "Yes", "No"],
-    "Soil Moisture (%)": [25, 35, 50, 30] if variable == "Soil Moisture" else [None] * 4,
-    "Temperature (°C)": [21, 26, 23, 22] if variable == "Temperature" else [None] * 4,
-    "NDVI Index": [0.6, 0.78, 0.72, 0.68] if variable == "NDVI" else [None] * 4,
-    "Rainfall (mm)": [12, 18, 14, 9] if variable == "Rainfall" else [None] * 4
-})
 
-# Layout with Two Columns
-col1, col2 = st.columns(2)
+    # Layout with Two Columns
+    col1, col2 = st.columns(2)
 
-with col1:
-    st.markdown(f"### 🌿 Farm Information (Filtered by {variable})")
-    st.dataframe(data1)
+    with col1:
+        st.markdown(f"### Tabular Data")
+        st.dataframe(data1)
 
-with col2:
-    st.markdown(f"### 🌾 Crop Yield Data (Filtered by {variable})")
-    st.dataframe(data2)
+    with col2:
+        st.markdown(f"### Data summary")
+        st.dataframe(data1.describe())
