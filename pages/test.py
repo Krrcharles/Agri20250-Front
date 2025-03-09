@@ -1,6 +1,6 @@
 import streamlit as st
-import pandas as pd
-import os
+import boto3
+from botocore.exceptions import ClientError
 from data_extraction import extract_polygon_data_from_html
 
 # Page Configuration
@@ -18,47 +18,74 @@ scale = st.sidebar.selectbox("Select Scale:", ["Finest", "Grid", "NUTS 3", "NUTS
 # Show Grid Toggle
 show_grid = st.sidebar.checkbox("Show Grid Overlay", False)
 
-# Variable Selection (This affects which layer or data is displayed on the map)
-variable = st.sidebar.selectbox("Select Variable:", ["Temperature", "NDVI", "Crop"])
+# Variable Selection
+variable = st.sidebar.selectbox("Select Variable:", ["Crop", "Moisture", "Temperature", "NDVI", "Population"])
 
-time = st.sidebar.selectbox("Select Scale:", ["2019", "2020", "2021", "2022", "2023"])
+# Time/Year Selection
+time = st.sidebar.selectbox("Select Year:", ["2019", "2020", "2021", "2022", "2023"])
 
 # Title
 st.title("🗺️ Interactive Agriculture Map Visualization")
 
-# Function to get the corresponding map file
 def get_map_file(zone, scale, grid, variable):
-    """Returns the appropriate map file name based on selected settings."""
-    var_suffix = f"_{variable.replace(' ', '_')}"  # Replace spaces with underscores for filenames
+    """
+    Constructs the S3 key for the HTML map file based on user selections.
+    """
     filename = f"maps/{zone}_{scale}_{variable}_{time}.html"
     return filename
 
-# Get the selected map file
-map_file = get_map_file(zone, scale, show_grid, variable)
+# Get the S3 key for the map file
+map_key = get_map_file(zone, scale, show_grid, variable)
 
-# Check if the file exists
-if os.path.exists(map_file):
-    with open(map_file, "r", encoding="utf-8") as f:
-        map_html = f.read()
-    st.components.v1.html(map_html, height=500)  # Display the map
+# S3 configuration
+bucket_name = 'your-s3-bucket-name'
+endpoint_url = 'https://your-custom-endpoint.com'
+aws_access_key_id = 'YOUR_ACCESS_KEY'
+aws_secret_access_key = 'YOUR_SECRET_KEY'
+
+def get_map_from_s3(bucket_name, key):
+    """
+    Retrieve HTML content from S3 using boto3 with a custom endpoint.
+    """
+    s3 = boto3.client(
+        's3',
+        endpoint_url=endpoint_url,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
+    try:
+        response = s3.get_object(Bucket=bucket_name, Key=key)
+        map_html = response['Body'].read().decode('utf-8')
+        return map_html
+    except ClientError as e:
+        st.error(f"Error reading map file from S3: {e}")
+        return None
+
+# Get the HTML content from S3
+map_html = get_map_from_s3(bucket_name, map_key)
+
+if map_html:
+    st.components.v1.html(map_html, height=500)
 else:
-    st.error(f"Map file `{map_file}` not found! Please ensure the file exists.")
+    st.error(f"Map file `{map_key}` not found in bucket `{bucket_name}`!")
 
+# If the selected scale is "Grid", display additional data tables
 if scale == "Grid":
-    # Data Tables Section
     st.subheader("📊 Data Tables")
+    
+    # Use the HTML content directly if your extraction function supports it.
+    data1 = extract_polygon_data_from_html(map_html) if map_html else None
 
-    # Sample Data (You can replace this with actual data from a database or CSV file)
-    data1 = extract_polygon_data_from_html(map_file)
-
-
-    # Layout with Two Columns
     col1, col2 = st.columns(2)
-
     with col1:
-        st.markdown(f"### Tabular Data")
-        st.dataframe(data1)
-
+        st.markdown("### Tabular Data")
+        if data1 is not None:
+            st.dataframe(data1)
+        else:
+            st.write("No data available.")
     with col2:
-        st.markdown(f"### Data summary")
-        st.dataframe(data1.describe())
+        st.markdown("### Data Summary")
+        if data1 is not None:
+            st.dataframe(data1.describe())
+        else:
+            st.write("No data available.")

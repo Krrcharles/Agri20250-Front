@@ -19,7 +19,7 @@ scale = st.sidebar.selectbox("Select Scale:", ["Finest", "Grid", "NUTS 3", "NUTS
 show_grid = st.sidebar.checkbox("Show Grid Overlay", False)
 
 # Variable Selection (This affects which layer or data is displayed on the map)
-variable = st.sidebar.selectbox("Select Variable:", ["Temperature", "NDVI", "Crop"])
+variable = st.sidebar.selectbox("Select Variable:", ["Crop", "Moisture", "Temperature", "NDVI", "Population"])
 
 time = st.sidebar.selectbox("Select Scale:", ["2019", "2020", "2021", "2022", "2023"])
 
@@ -29,7 +29,7 @@ st.title("🗺️ Interactive Agriculture Map Visualization")
 # Function to get the corresponding map file
 def get_map_file(zone, scale, grid, variable):
     """Returns the appropriate map file name based on selected settings."""
-    var_suffix = f"_{variable.replace(' ', '_')}"  # Replace spaces with underscores for filenames
+
     filename = f"maps/{zone}_{scale}_{variable}_{time}.html"
     return filename
 
