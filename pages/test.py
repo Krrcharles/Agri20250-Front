@@ -38,8 +38,8 @@ def get_map_file(zone, scale, grid, variable):
 map_key = get_map_file(zone, scale, show_grid, variable)
 
 # S3 configuration
-bucket_name = 'your-s3-bucket-name'
-endpoint_url = 'https://your-custom-endpoint.com'
+bucket_name = 'team-emos-ensai'
+endpoint_url = 's3.waw3-2.cloudferro.com'
 aws_access_key_id = 'YOUR_ACCESS_KEY'
 aws_secret_access_key = 'YOUR_SECRET_KEY'
 
